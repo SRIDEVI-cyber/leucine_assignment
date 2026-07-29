@@ -2,28 +2,51 @@ from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
 
-# Load embedding model
-model = SentenceTransformer("all-MiniLM-L6-v2")
+# Lazy-loaded model
+_model = None
 
-# Create FAISS index
+
+def get_model():
+    global _model
+    if _model is None:
+        print("Loading SentenceTransformer model...")
+        _model = SentenceTransformer("all-MiniLM-L6-v2")
+    return _model
+
+
+# FAISS index
 dimension = 384
 index = faiss.IndexFlatL2(dimension)
 
-# Store chunk text
+# Store document chunks
 documents = []
 
-def split_text(text, chunk_size=500):
 
+def split_text(text, chunk_size=500):
+    """
+    Split text into chunks of approximately chunk_size characters.
+    """
     chunks = []
 
     for i in range(0, len(text), chunk_size):
-        chunks.append(text[i:i+chunk_size])
+        chunks.append(text[i:i + chunk_size])
 
     return chunks
 
+
 def add_documents(text):
+    """
+    Split document into chunks and add embeddings to FAISS.
+    """
+
+    global documents
 
     chunks = split_text(text)
+
+    if not chunks:
+        return
+
+    model = get_model()
 
     embeddings = model.encode(chunks)
 
@@ -31,7 +54,16 @@ def add_documents(text):
 
     documents.extend(chunks)
 
+
 def search_documents(query, k=3):
+    """
+    Retrieve top-k relevant document chunks.
+    """
+
+    if len(documents) == 0:
+        return []
+
+    model = get_model()
 
     query_embedding = model.encode([query])
 
@@ -46,5 +78,4 @@ def search_documents(query, k=3):
         if idx < len(documents):
             results.append(documents[idx])
 
-    return "\n\n".join(results)
-
+    return results

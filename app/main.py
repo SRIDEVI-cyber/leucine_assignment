@@ -12,25 +12,40 @@ from app.routers import chat_router
 models.Base.metadata.create_all(bind=engine)
 
 # Create FastAPI application
-app = FastAPI(title="Leucine RAG Backend")
+app = FastAPI(
+    title="Leucine RAG Backend",
+    version="1.0.0"
+)
 
-# Enable CORS
+# CORS Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:5173",  # React Local
+        # Add your deployed frontend URL here later
+        # Example:
+        # "https://leucine-frontend.onrender.com"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Register routers
+# Register Routers
 app.include_router(auth_router.router)
 app.include_router(document_router.router)
 app.include_router(chat_router.router)
 
-# Home Route
+
 @app.get("/")
 def home():
     return {
         "message": "Backend is running successfully!"
+    }
+
+
+@app.get("/health")
+def health():
+    return {
+        "status": "ok"
     }
