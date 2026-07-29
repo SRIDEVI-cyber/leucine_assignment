@@ -30,3 +30,6 @@ def get_db():
         yield db
     finally:
         db.close()
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+print(DATABASE_URL)
